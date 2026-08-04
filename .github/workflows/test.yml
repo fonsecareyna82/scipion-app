@@ -1,0 +1,71 @@
+name: scipion-app tests
+
+on:
+  push:
+    branches: [ "devel" ]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.10']
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            pyproject.toml
+      - run: python -m pip install --upgrade pip
+      - run: pip install .[test]
+      - run: pip check
+      - run: pytest --junitxml=pytest-report.xml
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: pytest-report-${{ matrix.python-version }}
+          path: pytest-report.xml
+
+  gui:
+    # Import-smoke only for the tkinter-backed scripts - same treatment as
+    # pyworkflow/gui/, these get replaced by ScipionAPI/ScipionWeb eventually
+    # so no point investing in deeper GUI test coverage here.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.10']
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            pyproject.toml
+      - run: python -m pip install --upgrade pip
+      - run: pip install .[test]
+      - run: sudo apt-get update && sudo apt-get install -y python3-tk xvfb
+      - run: |
+          xvfb-run -a python -c "
+          import importlib
+          for m in ('scipion.install.plugin_manager', 'scipion.scripts.kickoff', 'scipion.scripts.fontbrowser', 'scipion.guiplugin'):
+              importlib.import_module(m)
+              print('OK', m)
+          "
