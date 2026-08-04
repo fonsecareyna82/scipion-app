@@ -36,3 +36,7 @@ The Scipion installer/launcher/plugin-manager. Top of the core dependency chain:
 - **`getModuleFolder` (`scipion/utils.py`) had a real Python-3.11+ bug**, found and fixed via this repo's own test suite: `os` (and other stdlib modules) are "frozen" on Python ≥3.11 — `importlib.util.find_spec("os").origin == "frozen"`, a sentinel string, not a real path. The fix excludes `"frozen"`/`"built-in"` from the direct-origin fast path so it falls through to the robust `import + __file__` fallback. If you're resolving module locations anywhere else in this ecosystem, expect the same trap.
 - `publish_and_tag.yml` used to call `python setup.py sdist` with **no `setup.py` in the repo** — fixed to `python -m build --sdist` (this repo builds purely from `pyproject.toml`). If you see `setup.py` referenced anywhere else in this ecosystem, verify it actually exists before assuming it works.
 - Tkinter imports (`plugin_manager.py`, `kickoff.py`, `fontbrowser.py`, `guiplugin.py`) work fine without a real display for import-only purposes — a display is only needed once a `Tk()` root window is actually instantiated. Don't assume you need `xvfb-run` just to import these.
+
+## Keeping this document current
+
+This file describes the repo as of the last time someone updated it — it will drift out of date as the code changes. If your change touches anything described above (architecture map, conventions, testing setup, gotchas), update the relevant section in this file as part of the same change, not as a separate follow-up. Don't wait to be asked.
