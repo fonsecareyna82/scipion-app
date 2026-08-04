@@ -73,8 +73,11 @@ def getModuleFolder(moduleName):
     if spec is None:
         raise ModuleNotFoundError(f"Module not found: {moduleName}")
 
+    # "frozen"/"built-in" are sentinel values, not real paths (e.g. `os` is
+    # a frozen module on Python >= 3.11) - fall through to the more robust
+    # lookups below instead of returning dirname("frozen") == "".
     origin = getattr(spec, "origin", None)
-    if origin:
+    if origin and origin not in ("frozen", "built-in"):
         return dirname(origin)
 
     searchLocations = getattr(spec, "submodule_search_locations", None)
