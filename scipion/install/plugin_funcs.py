@@ -210,7 +210,7 @@ class PluginInfo(object):
         """"Request json data from pypi, return json content"""
 
         url = f"{PIP_BASE_URL}/{self.pipName}/json"
-        logger.info(f"Getting plugin info at {url} ")
+        # logger.info(f"Getting plugin info at {url} ")
 
         pipData = requests.get(url)
         if pipData.ok:
